@@ -4,42 +4,41 @@ from aspose.email.tools.search import MailQueryBuilder
 import datetime as dt
 from datetime import timedelta
 
+# put here your POP3 server credentials
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
+
 def run():
-    #ExStart: FilterMessagesFromMailbox   
-    client = Pop3Client("pop.gmail.com", 995, "username", "password")
-    client.security_options = SecurityOptions.AUTO
- 
-    builder = MailQueryBuilder()
-
-    #Filtering on Subject
-    builder.subject.contains("Newsletter")
-
-    #Filtering on Internal Date
-    builder.internal_date.on(dt.datetime.now())
-
-    #Filtering on Date Range
-    builder.internal_date.before(dt.datetime.now())
-    builder.internal_date.since(dt.datetime.today() - timedelta(days=7))
-
-    #Filtering on Sender
-    builder.from_address.contains("saqib.razzaq@127.0.0.1")
-
-    #Filtering on Specific Domain
-    builder.from_address.contains("SpecificHost.com");
+    with Pop3Client("pop.gmail.com", 995, USER, PASSWORD) as client:
+        client.security_options = SecurityOptions.AUTO
     
-    #Filtering on specific Recipient
-    builder.to.contains("recipient")
+        builder = MailQueryBuilder()
 
-    #Combining Queries with OR
-    #builder.either(builder.subject.contains("test"), builder.from_address.contains("noreply@host.com"))
+        #Filtering on Subject
+        builder.subject.contains("Newsletter")
 
-    #Case-Sensitive Email Filtering
-    builder.subject.contains("Newsletter", True)
+        #Filtering on Internal Date
+        builder.internal_date.on(dt.datetime.now())
 
-    msgsColl = client.list_messages(builder.get_query())
+        #Filtering on Date Range
+        builder.internal_date.before(dt.datetime.now())
+        builder.internal_date.since(dt.datetime.today() - timedelta(days=7))
 
-    print("Filtered Messages Count: " + str(len(msgsColl)))
-    #ExEnd: FilterMessagesFromMailbox
+        #Filtering on Sender
+        builder.from_address.contains("saqib.razzaq@127.0.0.1")
+
+        #Filtering on Specific Domain
+        builder.from_address.contains("SpecificHost.com");
+        
+        #Filtering on specific Recipient
+        builder.to.contains("recipient")
+
+        #Case-Sensitive Email Filtering
+        builder.subject.contains("Newsletter", True)
+
+        msgsColl = client.list_messages(builder.get_query())
+
+        print("Filtered Messages Count: " + str(len(msgsColl)))
 
 if __name__ == '__main__':
     run()

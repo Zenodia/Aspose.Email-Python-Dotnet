@@ -1,6 +1,9 @@
 import aspose.email as ae
 from aspose.email.clients.smtp import SmtpClient
 
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
+
 def run():
     dataDir = "Data/";
     #ExStart: SpecifyRecipientAddresses
@@ -16,7 +19,7 @@ def run():
     eml.cc.append(ae.MailAddress("cc2@domain.com", "Recipient 4"))
 
     #Send using Smtp Client
-    client = SmtpClient("smtp.gmail.com", 587, "username", "password")
+    client = SmtpClient("smtp.gmail.com", 465, USER, PASSWORD)
     client.send(eml)
     #ExEnd: SpecifyRecipientAddresses
 

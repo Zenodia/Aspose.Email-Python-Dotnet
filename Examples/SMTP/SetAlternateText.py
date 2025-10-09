@@ -4,6 +4,9 @@ from aspose.email.clients import SecurityOptions
 from aspose.email import MailMessage
 from aspose.email import AlternateView
 
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
+
 def run():
     #ExStart: SetAlternateText
     eml = ae.MailMessage()
@@ -20,7 +23,7 @@ def run():
     eml.alternate_views.append(alternate)
 
     #Send using Smtp Client
-    client = SmtpClient("smtp.gmail.com", 995, "username", "password")
+    client = SmtpClient("smtp.gmail.com", 465, USER, PASSWORD)
     client.security_options = SecurityOptions.AUTO
 
     client.send(eml)

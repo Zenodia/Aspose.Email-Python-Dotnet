@@ -10,7 +10,7 @@ def run():
     dataDir = "Data/"
     #ExStart: LoadAppointment
     #Load Appointment instance
-    loadedAppointment = Appointment.load(dataDir + "AppointmentInICSFormat_out.ics")
+    loadedAppointment = Appointment.load(dataDir + "test.ics")
     print("Summary: " + loadedAppointment.summary)
     print("Location: " + loadedAppointment.location)
     print("Description: " + loadedAppointment.description)

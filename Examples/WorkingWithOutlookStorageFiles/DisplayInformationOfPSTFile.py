@@ -10,19 +10,18 @@ from datetime import timedelta
 import os
 
 def run():
-	dataDir = "Data/"
-	#ExStart: DisplayInformationOfPSTFile
-	personalStorage = PersonalStorage.from_file(dataDir + "Outlook.pst")
+    dataDir = "Data/"
+    #ExStart: DisplayInformationOfPSTFile
+    with  PersonalStorage.from_file(dataDir + "Outlook.pst", False) as personalStorage:
+        folderInfoCollection = personalStorage.root_folder.get_sub_folders()
 
-	folderInfoCollection = personalStorage.root_folder.get_sub_folders()
+        for folderInfo in folderInfoCollection:
 
-	for folderInfo in folderInfoCollection:
-
-		print("Folder: " + folderInfo.display_name)
-		print("Total Items: " + str(folderInfo.content_count))
-		print("Total Unread Items: " + str(folderInfo.content_unread_count))
-		print("----------------------")
-	#ExEnd: DisplayInformationOfPSTFile
-	
+            print("Folder: " + folderInfo.display_name)
+            print("Total Items: " + str(folderInfo.content_count))
+            print("Total Unread Items: " + str(folderInfo.content_unread_count))
+            print("----------------------")
+        #ExEnd: DisplayInformationOfPSTFile
+    
 if __name__ == '__main__':
     run()

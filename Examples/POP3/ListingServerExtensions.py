@@ -1,14 +1,18 @@
 from aspose.email.clients.pop3 import Pop3Client
 from aspose.email.clients import SecurityOptions
 
+# put here your POP3 server credentials
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
+
 def run():
-    #ExStart: ListingServerExtensions
-    client = Pop3Client("pop.gmail.com", 995, "username", "password")
-    client.security_options = SecurityOptions.AUTO
-    capabilities = client.get_capabilities()
-    for val in capabilities:
-            print(val);
-    #ExEnd: ListingServerExtensions
+    with Pop3Client("pop.gmail.com", 995, USER, PASSWORD) as client:
+        client.security_options = SecurityOptions.AUTO
+        client.timeout = 5000
+
+        capabilities = client.get_capabilities()
+        for val in capabilities:
+                print(val);
 
 
 if __name__ == '__main__':

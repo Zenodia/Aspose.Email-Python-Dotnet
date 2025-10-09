@@ -11,7 +11,7 @@ import os
 
 def run():
 	dataDir = "Data/"
-	#ExStart: AddMapiCalendarToPST
+
 	# Create the appointment
 	appointment = MapiCalendar(
 		"LAKE ARGYLE WA 6743",
@@ -35,12 +35,12 @@ def run():
 		attendees
 		)
 
-	os.remove(dataDir + "AddMapiCalendarToPST_out.pst")
-	personalStorage = PersonalStorage.create(dataDir + "AddMapiCalendarToPST_out.pst", FileFormatVersion.UNICODE)
+	pst_path = os.path.join(dataDir, "AddMapiCalendarToPST_out.pst")
+	if os.path.exists(pst_path):
+		os.remove(pst_path)
 
-	calFolder = personalStorage.create_predefined_folder("AsposeCalendar", StandardIpmFolder.APPOINTMENTS)
-	calFolder.add_mapi_message_item(appointment)
-	calFolder.add_mapi_message_item(meeting)
+	with PersonalStorage.create(pst_path, FileFormatVersion.UNICODE) as personalStorage:
+		calFolder = personalStorage.create_predefined_folder("AsposeCalendar", StandardIpmFolder.APPOINTMENTS)
+		calFolder.add_mapi_message_item(appointment)
+		calFolder.add_mapi_message_item(meeting)
 
-	personalStorage.dispose()
-	#ExEnd: AddMapiCalendarToPST

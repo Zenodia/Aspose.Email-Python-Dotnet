@@ -3,8 +3,12 @@ from aspose.email.clients.smtp import SmtpClient
 from aspose.email.clients import SecurityOptions
 from aspose.email import MailMessage
 
+# put here your SMTP server credentials
+USER = "dperov2025@gmail.com",
+PASSWORD = "xtib bivr myci rcbi",
+
+
 def run():
-    #ExStart: SendEmailSynchronously
     eml = ae.MailMessage()
     eml.subject = "New MailMessage created with Aspose.Email for Python"
     eml.html_body = "<b>This line is in bold </b> while this is normal text"
@@ -16,10 +20,10 @@ def run():
     eml.cc.append(ae.MailAddress("cc1@domain.com", "Recipient 3"))
     eml.cc.append(ae.MailAddress("cc2@domain.com", "Recipient 4"))
 
-    #Send using Smtp Client
-    client = SmtpClient("smtp.gmail.com", 587, "username", "password")
-    client.security_options = SecurityOptions.AUTO
-    client.send(eml)
-    #ExEnd: SendEmailSynchronously
+    # Send using Smtp Client
+    with SmtpClient("smtp.gmail.com", 465, USER, PASSWORD) as client:
+        client.security_options = SecurityOptions.AUTO
+        client.send(eml)
+
 if __name__ == '__main__':
     run()

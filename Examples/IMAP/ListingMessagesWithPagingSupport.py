@@ -1,29 +1,28 @@
 import aspose.email
 from aspose.email.clients.imap import ImapClient
+from aspose.email.clients.imap import PageSettings
 from aspose.email.clients import SecurityOptions
 
-def run():
-    dataDir = ""
+# put here your IMAP server credentials
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
 
-    #ExStart: ListingMessagesWithPagingSupport
-    client = ImapClient("imap.gmail.com", 993, "username", "password")
+def run():
+
+    client = ImapClient("imap.gmail.com", 993, USER, PASSWORD)
     client.select_folder("Inbox")
-    pages = []
-    itemsPerPage = 1
-    pageInfo = client.list_messages_by_page(itemsPerPage)
-    print(pageInfo.total_count)
-    pages.append(pageInfo)
+
+    itemsPerPage = 10
+    pageInfo = client.list_messages_by_page(itemsPerPage, 0, PageSettings())
+    print(f'Total message count: {pageInfo.total_count}')
 
     while not pageInfo.last_page:
-        pageInfo = client.list_messages_by_page(pageInfo.next_page)
-        pages.append(pageInfo)
-
-    retrievedItems = 0
-    for folderCol in pages:
-        retrievedItems+= len(folderCol.items)
-
-    print(str(retrievedItems))
-    #ExEnd: ListingMessagesWithPagingSupport
+        # output messages subject from the current page
+        print(f'Messages #{pageInfo.page_offset} - #{pageInfo.page_offset + itemsPerPage}:')
+        for info in pageInfo.items:
+            print(f'{info.unique_id}:{info.subject}')
+        # retrieve next page
+        pageInfo = client.list_messages_by_page(pageInfo.next_page, PageSettings())
 
 if __name__ == '__main__':
     run()

@@ -1,7 +1,8 @@
 from aspose.email import MailMessage
 
 def run():
-    dataDir = ""
+    dataDir = "Data/";
+
     #ExStart: DisplayEmailInformation
     # Create MailMessage instance by loading an Eml file
     message = MailMessage.load(dataDir + "test.eml")

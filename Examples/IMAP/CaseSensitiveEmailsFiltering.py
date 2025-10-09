@@ -1,23 +1,24 @@
-import aspose.email
 from aspose.email.clients.imap import ImapClient
-from aspose.email.clients import SecurityOptions
 from aspose.email.clients.imap import ImapQueryBuilder
-import datetime as dt
+
+# put here your IMAP server credentials
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
 
 def run():
-    dataDir = ""
-
     try:
-        #ExStart:CaseSensitiveEmailsFiltering
-        client = ImapClient("imap.gmail.com", 993, "username", "password")
-        client.select_folder("Inbox")
-        builder = ImapQueryBuilder()
-        builder.subject.contains("Newsletter", True)
-                
-        query = builder.get_query()
-        msgsColl = client.list_messages(query)
-        print("Total Messages fulfilling search criterion: " + str(len(msgsColl)))
-        #ExEnd:CaseSensitiveEmailsFiltering
+        with ImapClient("imap.gmail.com", 993, USER, PASSWORD) as client:
+            client.select_folder("Inbox")
+            builder = ImapQueryBuilder()
+            builder.subject.contains("Newsletter", True)
+                    
+            query = builder.get_query()
+            msgsColl = client.list_messages(query)
+            print("Total Messages fulfilling search criterion: " + str(len(msgsColl)))
+
+            for info in msgsColl:
+                print(f"Message subject: {info.subject}");
+
     except Exception as ex:
         print(str(ex))
 

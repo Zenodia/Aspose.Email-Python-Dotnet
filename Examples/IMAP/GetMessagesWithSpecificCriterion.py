@@ -1,14 +1,8 @@
-import aspose.email
-from aspose.email.clients.imap import ImapClient
-from aspose.email.clients import SecurityOptions
 from aspose.email.clients.imap import ImapQueryBuilder
 import datetime as dt
 from datetime import timedelta
 def run():
 
-    dataDir = ""
-
-    #ExStart: GetMessagesWithSpecificCriterion
     #Filter on Today's Date
     builder = ImapQueryBuilder()
     builder.internal_date.on(dt.datetime.now())
@@ -25,7 +19,6 @@ def run():
 
     #Specific Recipient
     builder.to.contains("recipient");
-    #ExEnd: GetMessagesWithSpecificCriterion
 
 if __name__ == '__main__':
     run()

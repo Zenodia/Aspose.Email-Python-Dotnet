@@ -8,6 +8,10 @@ from aspose.email.calendar import Appointment
 import datetime as dt
 from datetime import timedelta
 
+# put here your SMTP server credentials
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
+
 def run():
     #ExStart: SendingMeetingRequestsViaEmail
     eml = ae.MailMessage()
@@ -21,12 +25,10 @@ def run():
 
     eml.add_alternate_view(app.request_apointment())
 
-    #Send using Smtp Client
-    client = SmtpClient("smtp.gmail.com", 995, "username", "password")
-    client.security_options = SecurityOptions.AUTO
-
-    client.send(eml)
-    #ExEnd: SendingMeetingRequestsViaEmail
+    # Send using Smtp Client
+    with SmtpClient("smtp.gmail.com", 465, USER, PASSWORD) as client:
+        client.security_options = SecurityOptions.AUTO
+        client.send(eml)
 
 if __name__ == '__main__':
     run()

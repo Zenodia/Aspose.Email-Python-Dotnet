@@ -3,9 +3,9 @@ from aspose.email.clients import SecurityOptions
 
 def run():
 
-    #ExStart: DeleteEmailByIndex
     client = Pop3Client("imap.gmail.com", 993, "username", "password")
     client.security_options = SecurityOptions.AUTO
+    client.timeout = 5000
 
     # Delete all the message one by one
     messageCount = client.get_message_count()
@@ -16,7 +16,6 @@ def run():
         client.delete_message(i)
 
     client.commit_deletes()
-    #ExEnd: DeleteEmailByIndex  
 
 
 if __name__ == '__main__':

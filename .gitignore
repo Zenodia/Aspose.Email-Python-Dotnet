@@ -23,10 +23,15 @@ TestResults/
 *.vsmdi
 test-results/
 *.userprefs
-/ProgrammersGuide/ProgrammingEmail/SendingWithSMTP/AppointmentInICSFormat/Data/test.ics
 TestResults/
 *.vsmdi
 *.gitattributes
 *.log
 __pycache__
 *.pyc
+.vs/
+.vscode/
+**/env/**
+**/__pycache__/**
+__init__.py
+*.log

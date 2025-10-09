@@ -1,6 +1,3 @@
-import aspose.email
-from aspose.email.clients.imap import ImapClient
-from aspose.email.clients import SecurityOptions
 from aspose.email.clients.imap import ImapQueryBuilder
 from aspose.email.clients.imap import ImapMessageFlags
 import datetime as dt

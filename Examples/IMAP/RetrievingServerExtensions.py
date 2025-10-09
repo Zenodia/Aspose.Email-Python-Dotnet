@@ -1,16 +1,15 @@
-import aspose.email
 from aspose.email.clients.imap import ImapClient
 from aspose.email.clients import SecurityOptions
 
-def run():
-    dataDir = ""
+# put here your IMAP server credentials
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
 
-    #ExStart: RetrievingServerExtensions
-    client= ImapClient("imap.gmail.com", 993, "username", "password")
-    capabilities = client.get_capabilities()
-    for val in capabilities:
-        print(val);
-    #ExEnd: RetrievingServerExtensions
+def run():
+    with ImapClient("imap.gmail.com", 993, USER, PASSWORD) as client:
+        capabilities = client.get_capabilities()
+        for val in capabilities:
+            print(val);
 
 if __name__ == '__main__':
     run()

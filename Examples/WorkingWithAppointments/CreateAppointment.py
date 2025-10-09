@@ -17,7 +17,7 @@ def run():
     app.summary = "Release Meetting";
     app.description = "Discuss for the next release"
 
-    app.save("AppointmentInICSFormat_out.ics", AppointmentSaveFormat.ICS)
+    app.save(dataDir + "AppointmentInICSFormat_out.ics", AppointmentSaveFormat.ICS)
     #ExEnd: CreateAppointment
 
 if __name__ == '__main__':

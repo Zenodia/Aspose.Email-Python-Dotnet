@@ -20,8 +20,8 @@ def run():
 	app.summary = "Release Meetting";
 	app.description = "Discuss for the next release"
 
-	app.attachments.append(Attachment("1.jpg"))
-	app.attachments.append(Attachment("1.doc"))
+	app.attachments.append(Attachment(dataDir + "1.jpg"))
+	app.attachments.append(Attachment(dataDir + "1.doc"))
 
 	app.save(dataDir + "appWithAttachments_out.ics", AppointmentSaveFormat.ICS)
 

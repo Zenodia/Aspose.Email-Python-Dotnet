@@ -10,18 +10,13 @@ from datetime import timedelta
 import os
 
 def run():
-	dataDir = "Data/"
-	#ExStart: RetrievingParentFolderInformationFromMessageInfo
-	personalStorage = PersonalStorage.from_file(dataDir + "Outlook.pst")
+    dataDir = "Data/"
 
-	for folder in personalStorage.root_folder.get_sub_folders():
-
-		for messageInfo in folder.enumerate_messages():
-
-			folderInfo = personalStorage.get_parent_folder(messageInfo.entry_id)
-
-			print(folderInfo.display_name)
-	#ExEnd: RetrievingParentFolderInformationFromMessageInfo
-	
+    with PersonalStorage.from_file(dataDir + "Outlook.pst", False) as personalStorage:
+        for folder in personalStorage.root_folder.get_sub_folders():
+            for messageInfo in folder.enumerate_messages():
+                folderInfo = personalStorage.get_parent_folder(messageInfo.entry_id)
+                print(folderInfo.display_name)
+    
 if __name__ == '__main__':
     run()

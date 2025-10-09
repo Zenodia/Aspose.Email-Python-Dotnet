@@ -1,7 +1,11 @@
 import aspose.email as ae
 
+# put here your SMTP server credentials
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
+
 def run():
-    #ExStart: SpecifyCustomHeader
+
     # Create an instance of MailMessage class
     eml = ae.MailMessage()
     
@@ -12,18 +16,12 @@ def run():
     eml.subject = "test mail"
     eml.headers.add("secret-header", "mystery")
     
-    client = ae.clients.smtp.SmtpClient("smtp.gmail.com", 995, "username", "password")
-    
-    try:
+    with ae.clients.smtp.SmtpClient("smtp.gmail.com", 465, USER, PASSWORD) as client:
         # Client.Send will send this message
         client.send(eml)
-
         # Display ‘Message Sent’, only if message sent successfully
         print("Message sent")
-    except:
-        print("Some Error Occured!")
 
-    #ExEnd: SpecifyCustomHeader
 
 if __name__ == '__main__':
     run()

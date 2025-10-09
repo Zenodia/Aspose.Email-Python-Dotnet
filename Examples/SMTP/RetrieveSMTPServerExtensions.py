@@ -1,18 +1,15 @@
-import aspose.email as ae
 from aspose.email.clients.smtp import SmtpClient
 from aspose.email.clients import SecurityOptions
-from aspose.email import MailMessage
+
+# put here your SMTP server credentials
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
 
 def run():
-    #ExStart: RetrieveSMTPServerExtensions
-    client = SmtpClient("smtp.gmail.com", 587, "username", "password")
-    client.security_options = SecurityOptions.AUTO
-    caps = []
-    caps = client.get_capabilities()
-
-    for str in caps:
-        print(str)
-    #ExEnd: RetrieveSMTPServerExtensions
+    with SmtpClient("smtp.gmail.com", 465, USER, PASSWORD) as client:
+        client.security_options = SecurityOptions.AUTO
+        for str in client.get_capabilities():
+            print(str)
 
 if __name__ == '__main__':
     run()

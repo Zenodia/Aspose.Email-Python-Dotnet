@@ -2,14 +2,24 @@ import aspose.email
 from aspose.email.clients.imap import ImapClient
 from aspose.email.clients import SecurityOptions
 from aspose.email import MailMessage
+
+# put here your IMAP server credentials
+USER = "your_email@gmail.com"
+PASSWORD = "xxxx yyyy zzzz aaaa"
+
 def run():
     
     dataDir = ""
 
     #ExStart: MoveMessageToAnotherFolder
-    client = ImapClient("imap.gmail.com", 993, "username", "password")
+    client = ImapClient("imap.gmail.com", 993, USER, PASSWORD)
     client.select_folder("Inbox")
     folderName = "N1Renamed"
+
+    try:
+        client.create_folder(folderName)
+    except:
+        pass
 
     #Append a new Message to Inbox
     msg = MailMessage("user@domain1.com", "user@domain2.com", "subject", "message")

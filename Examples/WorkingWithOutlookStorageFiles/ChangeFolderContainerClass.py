@@ -10,7 +10,6 @@ def run():
 
 	folder.change_container_class("IPF.Note")
 
-	pst.dispose()
 	#ExEnd: ChangeFolderContainerClass
 	
 if __name__ == '__main__':

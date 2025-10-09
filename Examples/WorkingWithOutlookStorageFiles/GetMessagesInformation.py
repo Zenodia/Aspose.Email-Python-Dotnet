@@ -4,32 +4,28 @@ from aspose.email import License
 
 # Recursive method to traverse through all folders of a PST
 def DisplayFolderContents(folderInfo, pst):
-        print("Folder: " + folderInfo.display_name)
+    print("Folder: " + folderInfo.display_name)
 
-        print("==================================");
+    print("==================================");
 
-        # Display information about messages inside this folder
-        messageInfoCollection = folderInfo.get_contents()
+    # Display information about messages inside this folder
+    messageInfoCollection = folderInfo.get_contents()
 
-        for messageInfo in messageInfoCollection:
-                print ("Subject: " + messageInfo.subject)
-                print("To: " + messageInfo.display_to)
+    for messageInfo in messageInfoCollection:
+        print ("Subject: " + messageInfo.subject)
+        print("To: " + messageInfo.display_to)
 
-        if folderInfo.has_sub_folders is True:
-                for subFolderInfo in folderInfo.get_sub_folders():
-                        DisplayFolderContents(subFolderInfo, pst)
+    if folderInfo.has_sub_folders is True:
+        for subFolderInfo in folderInfo.get_sub_folders():
+            DisplayFolderContents(subFolderInfo, pst)
 
 def run():					
-	dataDir = "Data/"
+    dataDir = "Data/"
 
-	#ExStart: GetMessagesInformation
-	#Read PST file and recursively list its contents
-	pst = PersonalStorage.from_file(dataDir + "Outlook.pst")
-
-	folderInfo = pst.root_folder
-
-	DisplayFolderContents(folderInfo, pst)
-	#ExEnd: GetMessagesInformation
-	
+    #Read PST file and recursively list its contents
+    with PersonalStorage.from_file(dataDir + "Outlook.pst", False) as pst:
+        folderInfo = pst.root_folder
+        DisplayFolderContents(folderInfo, pst)
+        
 if __name__ == '__main__':
     run()
