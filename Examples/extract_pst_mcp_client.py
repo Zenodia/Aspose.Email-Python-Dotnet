@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore", message=".*streamable_http_client.*")
 
 MCP_SERVER_URL = os.environ.get(
     "MCP_EXTRACT_PST_SERVER_URL",
-    "http://127.0.0.1:9001/mcp",
+    "http://127.0.0.1:9003/mcp",
 )
 
 async def call_mcp(tool_name: str, arguments: dict, server_url: str) -> str:
@@ -113,11 +113,16 @@ def main() -> None:
 
     try:
         out = asyncio.run(call_mcp(args.tool, payload, server_url))
-        print(out)
+        #print(out)
     except Exception as e:
-        print(f"Error calling MCP server: {e}", file=sys.stderr)
+        #print(f"Error calling MCP server: {e}", file=sys.stderr)
+        out = f"Error calling MCP server: {e}"
         sys.exit(1)
-
+    return out
+## sample scripts on how to use this client
+##python extract_pst_mcp_client.py extract_pst --pst /absolute/path/to/mailbox.pst
+##python extract_pst_mcp_client.py draft_email --subject "Test" --to "user@example.com" --body "Hello" --out /tmp/draft.msg
 
 if __name__ == "__main__":
-    main()
+    output=main()
+    print(output)

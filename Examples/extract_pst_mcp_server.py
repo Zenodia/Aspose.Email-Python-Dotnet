@@ -41,7 +41,7 @@ mcp = FastMCP("ExtractPstMCP")
 
 @mcp.tool()
 async def extract_pst(
-    pst_path: str,
+    pst_path: str ,
     max_emails: Optional[int] = None,
     max_contacts: Optional[int] = None,
 ) -> str:
@@ -55,6 +55,7 @@ async def extract_pst(
     Returns:
         Text report (same content as the CLI extract command prints).
     """
+    pst_path= pst_path if pst_path is not None else"/home/ubuntu/OpenShellOpenClawMCP/Aspose.Email-Python-Dotnet/Examples/outlook.pst"
     try:
         return await asyncio.to_thread(
             pst.run_extract_to_string,
@@ -128,7 +129,7 @@ async def draft_email(
 
 if __name__ == "__main__":
     host = os.environ.get("MCP_EXTRACT_PST_HOST", "0.0.0.0")
-    port = int(os.environ.get("MCP_EXTRACT_PST_PORT", "9001"))
+    port = int(os.environ.get("MCP_EXTRACT_PST_PORT", "9003"))
     path = os.environ.get("MCP_EXTRACT_PST_PATH", "/mcp")
     log_level = os.environ.get("MCP_EXTRACT_PST_LOG_LEVEL", "debug")
 
