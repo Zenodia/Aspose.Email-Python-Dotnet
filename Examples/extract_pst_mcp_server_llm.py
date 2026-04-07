@@ -37,6 +37,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -58,10 +59,9 @@ from langchain_nvidia_ai_endpoints import ChatNVIDIA
 import extract_pst_emails_and_contacts as pst_lib
 
 colorama_init(autoreset=True)
+_EXAMPLES = "/home/ubuntu/openshell_openclaw_sim_gameworld-main/forked/Aspose.Email-Python-Dotnet/Examples/"
+DEFAULT_PST =  _EXAMPLES + "Data/" + "zcharpy_outlook.pst"
 
-DEFAULT_PST = str(
-    _EXAMPLES / "Data" / "Outlook.pst"
-)
 
 # ── LLM setup (same model as memory_mcp_server.py) ───────────────────────────
 llm = ChatNVIDIA(model="nvidia/llama-3.3-nemotron-super-49b-v1.5")
@@ -307,10 +307,156 @@ def _search_by_subject_sync(
     return header + "\n\n" + buf.getvalue()
 
 
+def _search_by_date_range_sync(
+    pst_path: str,
+    start_date: str,
+    end_date: str,
+    max_results: int,
+    folder_name: Optional[str],
+) -> str:
+    """Return emails whose delivery_time falls within [start_date, end_date].
+
+    Dates are parsed from ISO-8601 strings (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).
+    The range is inclusive on both ends (start defaults to 00:00:00, end to 23:59:59
+    when only a date is supplied).
+    """
+    from aspose.email.storage.pst import PersonalStorage, PersonalStorageQueryBuilder
+
+    def _parse(s: str, end_of_day: bool = False) -> datetime:
+        s = s.strip()
+        for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
+            try:
+                dt = datetime.strptime(s, fmt)
+                if fmt == "%Y-%m-%d" and end_of_day:
+                    dt = dt.replace(hour=23, minute=59, second=59)
+                return dt
+            except ValueError:
+                continue
+        raise ValueError(
+            f"Cannot parse date {s!r}. Use YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS."
+        )
+
+    try:
+        dt_start = _parse(start_date, end_of_day=False)
+        dt_end   = _parse(end_date,   end_of_day=True)
+    except ValueError as exc:
+        return f"Error: {exc}"
+
+    if dt_start > dt_end:
+        return "Error: start_date must be earlier than or equal to end_date."
+
+    pst_lib._apply_license(os.environ.get("ASPOSE_EMAIL_LICENSE_PATH"))
+    buf = io.StringIO()
+
+    qb = PersonalStorageQueryBuilder()
+    qb.delivery_time.since(dt_start)
+    qb.delivery_time.before(dt_end)
+    query = qb.get_query()
+
+    found = 0
+
+    def _walk(folder, store):
+        nonlocal found
+        if max_results and found >= max_results:
+            return
+        try:
+            messages = folder.get_contents(query)
+        except Exception:
+            messages = []
+        for info in messages:
+            if max_results and found >= max_results:
+                return
+            try:
+                mapi = store.extract_message(info)
+            except Exception as ex:
+                buf.write(f"[skip] {ex}\n")
+                continue
+            if not pst_lib._is_likely_mail(mapi):
+                continue
+            found += 1
+            buf.write(_format_message(mapi, found, _safe(folder.display_name)))
+        if folder.has_sub_folders:
+            for sub in folder.get_sub_folders():
+                _walk(sub, store)
+
+    with PersonalStorage.from_file(pst_path, False) as store:
+        if folder_name:
+            target = store.root_folder.get_sub_folder(folder_name)
+            if target is None:
+                return f"Folder '{folder_name}' not found in PST."
+            _walk(target, store)
+        else:
+            _walk(store.root_folder, store)
+
+    if found == 0:
+        return f"No emails found between {start_date} and {end_date}."
+    header = f"Found {found} email(s) between {start_date} and {end_date}"
+    if max_results and found >= max_results:
+        header += f" (stopped at limit {max_results})"
+    return header + "\n\n" + buf.getvalue()
+
+
+def _count_emails_sync(pst_path: str) -> str:
+    """Walk the PST folder tree and count email items per folder plus a grand total."""
+    from aspose.email.storage.pst import PersonalStorage
+
+    pst_lib._apply_license(os.environ.get("ASPOSE_EMAIL_LICENSE_PATH"))
+    buf = io.StringIO()
+    grand_total = 0
+
+    def _walk(folder, depth: int) -> int:
+        indent = "  " * depth
+        folder_count = 0
+        try:
+            messages = folder.get_contents()
+        except Exception:
+            messages = []
+        for info in messages:
+            try:
+                mapi = folder  # just counting via info iteration
+                _ = info       # info itself is the MessageInfo object
+                folder_count += 1
+            except Exception:
+                continue
+        sub_count = 0
+        if folder.has_sub_folders:
+            for sub in folder.get_sub_folders():
+                sub_count += _walk(sub, depth + 1)
+        total_here = folder_count + sub_count
+        buf.write(
+            f"{indent}[{_safe(folder.display_name)}]  "
+            f"direct={folder_count}  subtree={total_here}\n"
+        )
+        return total_here
+
+    with PersonalStorage.from_file(pst_path, False) as store:
+        store_name = _safe(getattr(store.store, "display_name", "")) or pst_path
+        buf.write(f"PST: {store_name}\n\n")
+
+        root = store.root_folder
+        # count root-level messages
+        try:
+            root_msgs = list(root.get_contents())
+        except Exception:
+            root_msgs = []
+        root_direct = len(root_msgs)
+
+        sub_total = 0
+        if root.has_sub_folders:
+            for sub in root.get_sub_folders():
+                sub_total += _walk(sub, 1)
+
+        grand_total = root_direct + sub_total
+        buf.write(f"\nGrand total emails: {grand_total}\n")
+
+    return buf.getvalue()
+
+
 # ── LLM intent parser ─────────────────────────────────────────────────────────
 
 _INTENT_SYSTEM_PROMPT = """\
 You are a parameter-extraction assistant for an Outlook PST email tool.
+the mails had been supplied to you by exported to a pst file and the absolute path to the pst file has been set so just assume the pst file exists by default. 
 Given a natural-language request return ONLY a valid JSON object — no markdown,
 no explanation, no extra text.
 
@@ -353,6 +499,26 @@ TOOLS AND THEIR PARAMETERS
   → Use when: user wants emails about a topic / with certain words in the subject
     e.g. "find emails about project kickoff"
 
+"get_emails_by_date_range"
+  pst_path     (string) — absolute path to the .pst file; empty string if not mentioned
+  start_date   (string) — start of range, ISO-8601: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS (inclusive)
+  end_date     (string) — end of range, ISO-8601: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS (inclusive)
+  max_results  (integer, optional, default 100)
+  folder_name  (string, optional) — search only this folder; omit to search all
+  → Use when: user asks for emails within a time window, date range, between two dates,
+    or during a specific month/year/period.
+    e.g. "show emails from January 2024"
+         "find all emails between 2024-03-01 and 2024-03-31"
+         "get emails received last quarter"
+
+"count_emails"
+  pst_path     (string) — absolute path to the .pst file; empty string if not mentioned
+  → Use when: user wants to know how many emails are in the PST, asks for a total count,
+    or wants per-folder email counts.
+    e.g. "how many emails are in the PST?"
+         "count all emails"
+         "how many messages does this mailbox have?"
+
 "draft_email"
   subject        (string, optional)
   body           (string, optional)
@@ -370,7 +536,7 @@ Rules:
 - Never invent a pst_path; use an empty string if none is mentioned.
 - Omit optional keys entirely when not mentioned.
 - Return ONLY the JSON object."""
-DEFAULT_PST="/home/ubuntu/OpenShellOpenClawMCP/Aspose.Email-Python-Dotnet/Examples/Data/Outlook.pst"
+
 
 def _llm_parse_intent(natural_language: str) -> dict:
     response = llm.invoke([
@@ -394,13 +560,14 @@ async def pst_agent(query: str) -> str:
     Accepts a plain-English request, uses an LLM to identify the intent and
     extract parameters, then dispatches automatically to the correct tool:
     extract_pst, search_emails_by_sender, get_latest_emails, list_pst_folders,
-    search_emails_by_subject, or draft_email.
+    search_emails_by_subject, get_emails_by_date_range, or draft_email.
 
     Args:
         query: e.g. "Extract the latest 10 emails from /data/mailbox.pst"
                "Find all emails sent by saqib.razzaq@xp.local"
                "Show me the folder structure of /data/mailbox.pst"
                "Find emails with 'project kickoff' in the subject"
+               "Show emails received between 2024-01-01 and 2024-03-31"
                "Draft an email to alice@example.com and save to /tmp/draft.msg"
     """
     try:
@@ -471,6 +638,29 @@ async def pst_agent(query: str) -> str:
         except Exception as ex:
             return f"Error (search_emails_by_subject): {type(ex).__name__}: {ex}"
 
+    elif tool_name == "get_emails_by_date_range":
+        start_date = args.get("start_date", "")
+        end_date   = args.get("end_date", "")
+        if not start_date or not end_date:
+            return "Error: 'start_date' and 'end_date' are required for get_emails_by_date_range."
+        try:
+            return await asyncio.to_thread(
+                _search_by_date_range_sync,
+                pst_path,
+                start_date,
+                end_date,
+                args.get("max_results", 100),
+                args.get("folder_name"),
+            )
+        except Exception as ex:
+            return f"Error (get_emails_by_date_range): {type(ex).__name__}: {ex}"
+
+    elif tool_name == "count_emails":
+        try:
+            return await asyncio.to_thread(_count_emails_sync, pst_path)
+        except Exception as ex:
+            return f"Error (count_emails): {type(ex).__name__}: {ex}"
+
     elif tool_name == "draft_email":
         out_path = args.get("out_path")
         append_to = args.get("append_to_pst")
@@ -500,7 +690,8 @@ async def pst_agent(query: str) -> str:
         return (
             f"Error: unrecognised tool '{tool_name}'. "
             "Valid: extract_pst, search_emails_by_sender, get_latest_emails, "
-            "list_pst_folders, search_emails_by_subject, draft_email."
+            "list_pst_folders, search_emails_by_subject, get_emails_by_date_range, "
+            "count_emails, draft_email."
         )
 
 
@@ -616,6 +807,62 @@ async def search_emails_by_subject(
             keyword,
             max_results,
         )
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
+async def get_emails_by_date_range(
+    start_date: str,
+    end_date: str,
+    pst_path: str = "",
+    max_results: int = 100,
+    folder_name: Optional[str] = None,
+) -> str:
+    """Fetch emails whose delivery date falls within a specific date range.
+
+    Uses PersonalStorageQueryBuilder delivery_time filters (since / before) for
+    efficient server-side filtering rather than loading every message.
+
+    Args:
+        start_date: Start of the date range (inclusive). ISO-8601 format:
+                    YYYY-MM-DD  — treated as midnight (00:00:00) of that day.
+                    YYYY-MM-DDTHH:MM:SS  — exact timestamp.
+                    e.g. "2024-01-01" or "2024-01-01T08:00:00"
+        end_date:   End of the date range (inclusive). ISO-8601 format:
+                    YYYY-MM-DD  — treated as 23:59:59 of that day.
+                    YYYY-MM-DDTHH:MM:SS  — exact timestamp.
+                    e.g. "2024-03-31" or "2024-03-31T17:30:00"
+        pst_path:   Absolute path to the .pst file (defaults to built-in sample).
+        max_results: Maximum number of matching emails to return (default 100).
+        folder_name: Search only this folder (e.g. "Inbox"). Omit to search all folders.
+    """
+    try:
+        return await asyncio.to_thread(
+            _search_by_date_range_sync,
+            pst_path or DEFAULT_PST,
+            start_date,
+            end_date,
+            max_results,
+            folder_name,
+        )
+    except Exception as ex:
+        return f"Error: {type(ex).__name__}: {ex}"
+
+
+@mcp.tool()
+async def count_emails(pst_path: str = "") -> str:
+    """Count the total number of email items in the PST, broken down by folder.
+
+    Uses folder.get_contents() to count messages per folder and walks the full
+    folder tree, reporting direct item counts and subtree totals alongside a
+    grand total across the entire mailbox.
+
+    Args:
+        pst_path: Absolute path to the .pst file (defaults to built-in sample).
+    """
+    try:
+        return await asyncio.to_thread(_count_emails_sync, pst_path or DEFAULT_PST)
     except Exception as ex:
         return f"Error: {type(ex).__name__}: {ex}"
 

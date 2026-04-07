@@ -3,6 +3,22 @@
 
 [Aspose.Email for Python via .NET](https://products.aspose.com/email/python-net) is a complete set of Email Processing APIs to create, read and manipulate emails from within your Python applications. It makes it easier to work with many Outlook email message formats such as MSG, EML, EMLX and MHT files without the need of installing Microsoft Outlook. It also enables you to manage message storage files - Personal Storage Files (PST), Offline Storage Files (OST) along with message sending and receiving capabilities. You can also read and extract Outlook PST file that can be saved to disk in MSG format.
 
+# to install you will need to do 
+```pip install Aspose.Email-for-Python-via-NET```
+and then 
+```
+wget https://www.openssl.org/source/openssl-1.1.1c.tar.gz
+tar -xzvf openssl-1.1.1c.tar.gz
+cd openssl-1.1.1c
+./config
+make
+sudo make install (it puts it into /usr/local/lib so it doesn't mess with the rest of your system)
+## and then 
+LD_LIBRARY_PATH="/usr/local/lib" dotnet
+# or
+export export LD_LIBRARY_PATH="/usr/local/lib"
+```
+
 <p align="center">
 <a title="Download complete Aspose.Email for Pytho via .NET source code" href="https://github.com/aspose-email/Aspose.Email-for-.NET/archive/master.zip">
 	<img src="https://raw.github.com/AsposeExamples/java-examples-dashboard/master/images/downloadZip-Button-Large.png" />
